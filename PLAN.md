@@ -26,13 +26,13 @@ APIs.
 
 Use this split:
 
-| Layer | Language | Responsibility |
-|---|---|---|
-| MCP server | Go | MCP stdio transport, tool schemas, request validation, logging, error mapping |
-| Grasshopper client | Go | Typed client for the local Grasshopper control protocol |
-| Domain model | Go | Component ids, parameter refs, graph operations, command/result DTOs |
-| Grasshopper adapter | C# | Rhino/Grasshopper lifecycle, document access, component creation, solver calls |
-| Packaging | PowerShell/Yak | Build `.gha`, build Go executable, produce installable layout |
+| Layer               | Language       | Responsibility                                                                 |
+| ------------------- | -------------- | ------------------------------------------------------------------------------ |
+| MCP server          | Go             | MCP stdio transport, tool schemas, request validation, logging, error mapping  |
+| Grasshopper client  | Go             | Typed client for the local Grasshopper control protocol                        |
+| Domain model        | Go             | Component ids, parameter refs, graph operations, command/result DTOs           |
+| Grasshopper adapter | C#             | Rhino/Grasshopper lifecycle, document access, component creation, solver calls |
+| Packaging           | PowerShell/Yak | Build `.gha`, build Go executable, produce installable layout                  |
 
 This differs slightly from the pure in-process component MVP discussed in
 `goal.md`: because this repository is named `grasshopper-mcp`, the first working
@@ -100,6 +100,12 @@ Current implementation status on Ubuntu:
 - Milestone 4 is partially done. The minimal stdio MCP server is implemented
   for the phase-2 tools and covered by Go tests. MCP inspector compatibility
   still needs a live external check.
+- Milestone 5 is partially done. The portable command surface for graph
+  mutation is implemented in Go and routed in C#, but actual Grasshopper graph
+  mutation still needs live Rhino API wiring on Windows.
+- Pre-Windows hardening is partially done. A fake adapter, protocol fixtures,
+  stronger argument validation, shared version constants, and a Windows smoke
+  checklist are in place.
 
 ### 1. Project Skeleton
 
@@ -119,7 +125,7 @@ Acceptance criteria:
 - [x] `go run ./cmd/grasshopper-mcp --help` prints available commands.
 - [x] `dotnet build` fails clearly on Ubuntu when `RHINO_SYSTEM_DIR` is unset.
 - [ ] `dotnet build` compiles the plugin project on a Windows Rhino dev
-  machine.
+      machine.
 - [ ] The generated `.gha` can be copied into Grasshopper's library folder.
 
 ### 2. Local Grasshopper Control Protocol
@@ -144,9 +150,9 @@ Acceptance criteria:
 - [x] Unknown methods return a structured `unknown_method` error.
 - [x] The server binds to `IPAddress.Loopback`, not a public interface.
 - [ ] When Rhino/Grasshopper is open, a local client can call `health` and
-  receive plugin version plus active-document state.
+      receive plugin version plus active-document state.
 - [ ] Live Rhino smoke test confirms errors are JSON responses, not unhandled
-  exceptions.
+      exceptions.
 
 ### 3. Go Grasshopper Client
 
@@ -166,8 +172,9 @@ Acceptance criteria:
 - [x] Go tests cover structured protocol errors.
 - [x] Go tests cover malformed responses.
 - [x] Go tests cover request timeout behavior.
+- [x] Protocol contract fixtures cover representative request/response JSON.
 - [x] CLI debug subcommands exist for `health`, `document-info`,
-  `list-components`, and `run-solver`.
+      `list-components`, and `run-solver`.
 - [x] Adapter address can be configured with `GRASSHOPPER_MCP_ADDR`.
 
 ### 4. Minimal MCP Server
@@ -186,37 +193,54 @@ Deliverables:
 
 Acceptance criteria:
 
-- [x] `tools/list` returns the initial four tools in Go tests.
+- [x] `tools/list` returns all eight MVP tools in Go tests.
 - [x] `tools/call` delegates to the Go Grasshopper client in Go tests.
 - [x] Tool calls fail cleanly when the adapter is unavailable.
+- [x] Local fake-adapter smoke test confirms CLI calls work without Rhino.
 - [ ] MCP inspector or a compatible MCP client can list tools.
 - [ ] `grasshopper_health` works with Grasshopper open.
 
 ### 5. Graph Mutation MVP
 
-Status: Not started.
+Status: Partially done.
 
 Deliverables:
 
 - [ ] Add C# services for safe graph mutation on the Grasshopper/Rhino UI
-  thread.
-- [ ] Implement `add_component` protocol command.
-- [ ] Implement `set_input` protocol command.
-- [ ] Implement `connect` protocol command.
-- [ ] Implement `get_output` protocol command.
-- [ ] Add matching Go client methods.
-- [ ] Add matching MCP tools.
+      thread.
+- [x] Define `add_component` protocol DTOs in Go.
+- [x] Define `set_input` protocol DTOs in Go.
+- [x] Define `connect` protocol DTOs in Go.
+- [x] Define `get_output` protocol DTOs in Go.
+- [x] Add C# routes for `add_component`, `set_input`, `connect`, and
+      `get_output`.
+- [x] Return stable C# `graph_mutation_not_implemented` errors until live Rhino
+      wiring exists.
+- [x] Add matching Go client methods.
+- [x] Add matching MCP tools.
+- [x] Add matching CLI debug commands.
 - [ ] Start with common built-in component lookup by name/category/nickname.
 
 Acceptance criteria:
 
+- [x] Go tests cover `add_component` request forwarding.
+- [x] Go tests cover `connect` request forwarding.
+- [x] Go tests cover empty `add_component` name validation.
+- [x] Go tests cover empty parameter reference validation.
+- [x] MCP `tools/list` includes all eight MVP tools.
+- [x] MCP `tools/call` can invoke `grasshopper_add_component` in fake-server
+      tests.
 - [ ] From an MCP client, create a small graph in an empty Grasshopper document.
 - [ ] Set numeric inputs on created components.
 - [ ] Connect at least two component parameters.
 - [ ] Run the solver after graph mutation.
 - [ ] Read an expected output value through `get_output`.
 - [ ] Invalid component names produce stable, actionable errors.
-- [ ] Invalid parameter references produce stable, actionable errors.
+- [x] Empty parameter references produce stable, actionable errors before
+      reaching Grasshopper.
+- [x] Object values for `set_input` are rejected before reaching Grasshopper.
+- [ ] Non-empty but nonexistent parameter references produce stable, actionable
+      errors from live Grasshopper.
 - [ ] Graph mutation is dispatched safely on the Grasshopper/Rhino UI thread.
 
 ### 6. Packaging and Manual Distribution
@@ -237,31 +261,36 @@ Acceptance criteria:
 - [ ] `build/build.ps1` completes on a Windows Rhino dev machine.
 - [ ] `build/package.ps1` stages a usable `dist` directory.
 - [ ] A clean Windows machine with Rhino 8, Go-built executable, and the plugin
-  can run the full health-to-result smoke test.
+      can run the full health-to-result smoke test.
 - [ ] No absolute developer-machine paths are required at runtime.
 - [ ] The staged MCP client config launches the Go server correctly.
 
 ### 7. Hardening
 
-Status: Not started.
+Status: Partially done.
 
 Deliverables:
 
 - [ ] Add request correlation ids and structured logs on both sides.
+- [x] Add shared version constants on both sides.
 - [ ] Add version negotiation between Go server and C# plugin.
-- [ ] Add configurable port with safe default and discovery fallback.
+- [x] Add configurable Go adapter address with safe default.
+- [x] Add configurable C# adapter port with safe default.
+- [ ] Add discovery fallback.
 - [ ] Add component catalog cache invalidation.
 - [ ] Add Rhino compatibility smoke notes for Rhino 8 updates.
 - [ ] Add long-running solver timeout behavior.
+- [x] Add fake adapter for local pre-Windows smoke testing.
+- [x] Add Windows smoke checklist.
 
 Acceptance criteria:
 
 - [ ] Version mismatch reports a clear message.
 - [ ] Logs are enough to diagnose "MCP client cannot reach Grasshopper" without
-  a debugger.
+      a debugger.
 - [ ] Long-running solver calls time out at the Go/MCP boundary without leaving
-  the server wedged.
-- [ ] Port conflicts report a clear startup error.
+      the server wedged.
+- [x] C# adapter startup failures report a clear Rhino command-history message.
 - [ ] Component catalog changes are reflected without restarting the Go server.
 
 ## Protocol Shape
@@ -307,16 +336,16 @@ Error response:
 
 ## MVP Tool List
 
-| MCP tool | Grasshopper command | Purpose |
-|---|---|---|
-| `grasshopper_health` | `health` | Verify plugin connection and versions |
-| `grasshopper_document_info` | `document_info` | Inspect active document state |
-| `grasshopper_list_components` | `list_components` | Discover available components |
-| `grasshopper_add_component` | `add_component` | Place a component on the canvas |
-| `grasshopper_set_input` | `set_input` | Assign simple values to inputs |
-| `grasshopper_connect` | `connect` | Connect output parameter to input parameter |
-| `grasshopper_run_solver` | `run_solver` | Recompute the graph |
-| `grasshopper_get_output` | `get_output` | Read computed output values |
+| MCP tool                      | Grasshopper command | Purpose                                     |
+| ----------------------------- | ------------------- | ------------------------------------------- |
+| `grasshopper_health`          | `health`            | Verify plugin connection and versions       |
+| `grasshopper_document_info`   | `document_info`     | Inspect active document state               |
+| `grasshopper_list_components` | `list_components`   | Discover available components               |
+| `grasshopper_add_component`   | `add_component`     | Place a component on the canvas             |
+| `grasshopper_set_input`       | `set_input`         | Assign simple values to inputs              |
+| `grasshopper_connect`         | `connect`           | Connect output parameter to input parameter |
+| `grasshopper_run_solver`      | `run_solver`        | Recompute the graph                         |
+| `grasshopper_get_output`      | `get_output`        | Read computed output values                 |
 
 Keep the first value types deliberately small: numbers, booleans, strings, and
 flat lists. Geometry serialization can be added after the command loop is
@@ -348,14 +377,14 @@ End-to-end:
 
 ## Main Risks
 
-| Risk | Mitigation |
-|---|---|
-| Grasshopper API calls from the wrong thread | Centralize UI-thread dispatch in the C# adapter |
-| Protocol drift between Go and C# | Keep a versioned protocol document and contract tests |
-| Component lookup ambiguity | Return candidates and require stable ids where possible |
-| Rhino version differences | Start Rhino 8-only, add compatibility checks later |
-| Complex geometry serialization too early | Defer geometry; prove scalar/list graph operations first |
-| MCP debugging is opaque | Provide direct Go CLI debug commands beside MCP tools |
+| Risk                                        | Mitigation                                               |
+| ------------------------------------------- | -------------------------------------------------------- |
+| Grasshopper API calls from the wrong thread | Centralize UI-thread dispatch in the C# adapter          |
+| Protocol drift between Go and C#            | Keep a versioned protocol document and contract tests    |
+| Component lookup ambiguity                  | Return candidates and require stable ids where possible  |
+| Rhino version differences                   | Start Rhino 8-only, add compatibility checks later       |
+| Complex geometry serialization too early    | Defer geometry; prove scalar/list graph operations first |
+| MCP debugging is opaque                     | Provide direct Go CLI debug commands beside MCP tools    |
 
 ## First Implementation Sprint
 

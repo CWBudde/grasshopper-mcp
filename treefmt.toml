@@ -1,0 +1,75 @@
+# run with treefmt --no-cache --allow-missing-formatter
+
+[global]
+excludes = [
+  # Version control and local metadata
+  "**/.git/**",
+  "**/.gitignore",
+  ".codex/**",
+
+  # Build and test artifacts
+  "bin/**",
+  "dist/**",
+  "coverage.out",
+  "coverage.html",
+  "src/**/bin/**",
+  "src/**/obj/**",
+  "tests/**/bin/**",
+  "tests/**/obj/**",
+
+  # Tool-managed module files
+  "go.mod",
+  "go.sum",
+
+  # Binary and generated plugin artifacts
+  "**/*.dll",
+  "**/*.exe",
+  "**/*.gha",
+  "**/*.pdb",
+]
+
+### Go
+
+[formatter.gofumpt]
+command = "gofumpt"
+options = ["-w"]
+includes = ["*.go"]
+
+[formatter.gci]
+command = "gci"
+options = [
+  "write",
+  "--skip-generated",
+  "-s",
+  "standard",
+  "-s",
+  "default",
+  "-s",
+  "Prefix(github.com/cwbudde/grasshopper-mcp)",
+]
+includes = ["*.go"]
+# Run after gofumpt.
+priority = 1
+
+# C# is formatted by `just fmt-csharp`; dotnet format is project-scoped.
+# Shell scripts are linted by `just lint-shell`; treefmt only formats them.
+
+### Shell
+
+[formatter.shfmt]
+command = "shfmt"
+options = ["-s", "-w"]
+includes = ["*.sh"]
+
+### Docs and config
+
+[formatter.prettier]
+command = "prettier"
+options = ["-w"]
+includes = ["*.json", "*.md", "*.yaml", "*.yml"]
+excludes = ["**/*.sops.*"]
+
+[formatter.taplo]
+command = "taplo"
+options = ["fmt"]
+includes = ["*.toml"]

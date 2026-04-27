@@ -1,0 +1,8 @@
+{
+  "id": "contract-3",
+  "method": "connect",
+  "params": {
+    "source": { "componentId": "component-1", "parameter": "R" },
+    "target": { "componentId": "component-2", "parameter": "A" }
+  }
+}

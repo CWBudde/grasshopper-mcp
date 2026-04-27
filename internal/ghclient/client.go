@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"reflect"
 	"sync/atomic"
 	"time"
 )
@@ -89,6 +90,9 @@ func (c *Client) RunSolver(ctx context.Context) (RunSolverResult, error) {
 }
 
 func (c *Client) AddComponent(ctx context.Context, params AddComponentParams) (AddComponentResult, error) {
+	if params.Name == "" && params.Nickname == "" {
+		return AddComponentResult{}, &ProtocolError{Code: "invalid_arguments", Message: "add_component requires name or nickname"}
+	}
 	var result AddComponentResult
 	if err := c.call(ctx, "add_component", params, &result); err != nil {
 		return AddComponentResult{}, err
@@ -97,6 +101,12 @@ func (c *Client) AddComponent(ctx context.Context, params AddComponentParams) (A
 }
 
 func (c *Client) SetInput(ctx context.Context, params SetInputParams) (SetInputResult, error) {
+	if err := validateParameterRef("target", params.Target); err != nil {
+		return SetInputResult{}, err
+	}
+	if err := validateInputValue(params.Value); err != nil {
+		return SetInputResult{}, err
+	}
 	var result SetInputResult
 	if err := c.call(ctx, "set_input", params, &result); err != nil {
 		return SetInputResult{}, err
@@ -105,6 +115,12 @@ func (c *Client) SetInput(ctx context.Context, params SetInputParams) (SetInputR
 }
 
 func (c *Client) Connect(ctx context.Context, params ConnectParams) (ConnectResult, error) {
+	if err := validateParameterRef("source", params.Source); err != nil {
+		return ConnectResult{}, err
+	}
+	if err := validateParameterRef("target", params.Target); err != nil {
+		return ConnectResult{}, err
+	}
 	var result ConnectResult
 	if err := c.call(ctx, "connect", params, &result); err != nil {
 		return ConnectResult{}, err
@@ -113,11 +129,64 @@ func (c *Client) Connect(ctx context.Context, params ConnectParams) (ConnectResu
 }
 
 func (c *Client) GetOutput(ctx context.Context, params GetOutputParams) (GetOutputResult, error) {
+	if err := validateParameterRef("source", params.Source); err != nil {
+		return GetOutputResult{}, err
+	}
 	var result GetOutputResult
 	if err := c.call(ctx, "get_output", params, &result); err != nil {
 		return GetOutputResult{}, err
 	}
 	return result, nil
+}
+
+func validateParameterRef(name string, ref ParameterRef) error {
+	if ref.ComponentID == "" {
+		return &ProtocolError{Code: "invalid_arguments", Message: fmt.Sprintf("%s.componentId is required", name)}
+	}
+	if ref.Parameter == "" {
+		return &ProtocolError{Code: "invalid_arguments", Message: fmt.Sprintf("%s.parameter is required", name)}
+	}
+	return nil
+}
+
+func validateInputValue(value any) error {
+	if !isJSONScalarOrList(value) {
+		return &ProtocolError{
+			Code:    "invalid_arguments",
+			Message: "value must be a JSON scalar or list of JSON scalars",
+		}
+	}
+	if _, err := json.Marshal(value); err != nil {
+		return &ProtocolError{Code: "invalid_arguments", Message: fmt.Sprintf("value is not JSON-encodable: %v", err)}
+	}
+	return nil
+}
+
+func isJSONScalarOrList(value any) bool {
+	if value == nil {
+		return true
+	}
+	switch value.(type) {
+	case bool, string,
+		int, int8, int16, int32, int64,
+		uint, uint8, uint16, uint32, uint64,
+		float32, float64,
+		json.Number:
+		return true
+	}
+
+	rv := reflect.ValueOf(value)
+	switch rv.Kind() {
+	case reflect.Slice, reflect.Array:
+		for i := range rv.Len() {
+			if !isJSONScalarOrList(rv.Index(i).Interface()) {
+				return false
+			}
+		}
+		return true
+	default:
+		return false
+	}
 }
 
 func (c *Client) call(ctx context.Context, method string, params any, result any) error {

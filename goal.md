@@ -26,16 +26,16 @@ Wenn das Produktziel **eigene Grasshopper-Komponenten** ist, sollte das MVP bewu
 
 Die folgende Scope-Gegenüberstellung ist eine empfohlene Projektabgrenzung auf Basis der Rhino-/Grasshopper-Plugin-Mechanik, der Rhino-8-Laufzeitentwicklung und des Referenzrepos. citeturn29search0turn29search1turn10search0
 
-| Dimension | Minimal viable MCP | Full-featured Umsetzung |
-|---|---|---|
-| Zielplattform | Rhino 8.20+ auf Windows | Rhino 7/8 auf Windows, optional spätere Mac-Perspektive |
-| Architektur | C# `.gha` + Go-DLL | C# `.gha` + Go-DLL + optionaler Go-MCP-Server |
-| Komponentenanzahl | 1–3 Beispielkomponenten | Mehrere Kategorien, Optionen, Upgrade-Pfade |
-| Interop | Nur native Interop | Native Interop plus optionale Prozess-/Transportebene |
-| Packaging | Manuelles Kopieren oder einfacher Yak-Build | Yak-Distributionen, CI-Artefakte, Versionierung |
-| Tests | Go-Unit-Tests + Smoke-Test in Rhino | Go-Unit-Tests, .NET-Tests, Packaging-Tests, Kompatibilitäts-Checks |
-| Versionierung | Feste Component GUIDs ab Tag 1 | Zusätzlich Upgrade-Mechanismen bei Breaking Changes |
-| MCP/LLM-Anbindung | Nein | Optional, falls fachlich wirklich benötigt |
+| Dimension         | Minimal viable MCP                          | Full-featured Umsetzung                                            |
+| ----------------- | ------------------------------------------- | ------------------------------------------------------------------ |
+| Zielplattform     | Rhino 8.20+ auf Windows                     | Rhino 7/8 auf Windows, optional spätere Mac-Perspektive            |
+| Architektur       | C# `.gha` + Go-DLL                          | C# `.gha` + Go-DLL + optionaler Go-MCP-Server                      |
+| Komponentenanzahl | 1–3 Beispielkomponenten                     | Mehrere Kategorien, Optionen, Upgrade-Pfade                        |
+| Interop           | Nur native Interop                          | Native Interop plus optionale Prozess-/Transportebene              |
+| Packaging         | Manuelles Kopieren oder einfacher Yak-Build | Yak-Distributionen, CI-Artefakte, Versionierung                    |
+| Tests             | Go-Unit-Tests + Smoke-Test in Rhino         | Go-Unit-Tests, .NET-Tests, Packaging-Tests, Kompatibilitäts-Checks |
+| Versionierung     | Feste Component GUIDs ab Tag 1              | Zusätzlich Upgrade-Mechanismen bei Breaking Changes                |
+| MCP/LLM-Anbindung | Nein                                        | Optional, falls fachlich wirklich benötigt                         |
 
 Aus Projektsicht ist die wichtigste Entscheidung nicht „Go oder C#“, sondern **wo Go endet und wo Grasshopper beginnt**. Für das MVP sollte Go **nur** den Rechenkern und datennahe Logik enthalten. Alles, was mit `GH_Component`, Parametern, Canvas-Exposition, Runtime-Messages, Assembly-Metadaten und Packaging zu tun hat, gehört in die C#-Schicht. Das minimiert Interop-Fläche und maximiert Debuggability. citeturn28search4turn28search0turn16search5
 
@@ -49,18 +49,18 @@ Offiziell ist auf Windows die primäre Rhino-/Grasshopper-Entwicklungsumgebung *
 
 Die folgende Matrix trennt sauber zwischen **wirklich erforderlich**, **empfohlen** und **nur in Spezialfällen sinnvoll**. Sie kombiniert offizielle Rhino-, Go- und Microsoft-Dokumentation mit einer konkreten Projektentscheidung für Windows. citeturn24search0turn23search0turn31search0turn29search0turn29search1turn15search0
 
-| Werkzeug / Abhängigkeit | MVP | Vollausbau | Begründung |
-|---|---|---|---|
-| Go 1.26.x | Erforderlich | Erforderlich | Aktuelle stabile Go-Linie; nötig für `cgo` und `c-shared` |
-| `cgo` | Erforderlich | Erforderlich | Go-DLL mit exportierten C-Symbolen |
-| C-Compiler für `cgo` | Erforderlich | Erforderlich | Praktisch meist MinGW-w64 GCC oder LLVM/Clang im `PATH` |
-| .NET SDK 8 | Empfohlen | Erforderlich | Sauberer Fit zu Rhino 8.20+ |
-| Visual Studio 2022 | Empfohlen | Empfohlen | Offiziell beste Windows-Authoring-/Debugging-Story |
-| Visual Studio Build Tools | Optional | Empfohlen | Headless Build, CI, MSBuild-Workloads |
-| MSBuild | Optional | Empfohlen | `dotnet build` nutzt ihn ohnehin; direkter Aufruf bleibt nützlich |
-| .NET Framework 4.8 Targeting Pack | Nicht für Rhino-8-only | Erforderlich bei Rhino-7-Support | Rhino 7 basiert auf .NET Framework 4.8 |
-| SWIG | Nicht sinnvoll | Nur Spezialfall | Nur für große C/C++-Wrapperflächen; ersetzt nicht den C#-Shim |
-| COM-Interop-Know-how | Optional | Optional | Nicht Kern des MVP, nur für spätere externe Automation |
+| Werkzeug / Abhängigkeit           | MVP                    | Vollausbau                       | Begründung                                                        |
+| --------------------------------- | ---------------------- | -------------------------------- | ----------------------------------------------------------------- |
+| Go 1.26.x                         | Erforderlich           | Erforderlich                     | Aktuelle stabile Go-Linie; nötig für `cgo` und `c-shared`         |
+| `cgo`                             | Erforderlich           | Erforderlich                     | Go-DLL mit exportierten C-Symbolen                                |
+| C-Compiler für `cgo`              | Erforderlich           | Erforderlich                     | Praktisch meist MinGW-w64 GCC oder LLVM/Clang im `PATH`           |
+| .NET SDK 8                        | Empfohlen              | Erforderlich                     | Sauberer Fit zu Rhino 8.20+                                       |
+| Visual Studio 2022                | Empfohlen              | Empfohlen                        | Offiziell beste Windows-Authoring-/Debugging-Story                |
+| Visual Studio Build Tools         | Optional               | Empfohlen                        | Headless Build, CI, MSBuild-Workloads                             |
+| MSBuild                           | Optional               | Empfohlen                        | `dotnet build` nutzt ihn ohnehin; direkter Aufruf bleibt nützlich |
+| .NET Framework 4.8 Targeting Pack | Nicht für Rhino-8-only | Erforderlich bei Rhino-7-Support | Rhino 7 basiert auf .NET Framework 4.8                            |
+| SWIG                              | Nicht sinnvoll         | Nur Spezialfall                  | Nur für große C/C++-Wrapperflächen; ersetzt nicht den C#-Shim     |
+| COM-Interop-Know-how              | Optional               | Optional                         | Nicht Kern des MVP, nur für spätere externe Automation            |
 
 Für dieses Vorhaben ist eine kleine, aber wichtige Unterscheidung entscheidend: **MinGW-w64/clang** deckt den von Go dokumentierten `cgo`-Kompilierpfad ab; **Visual Studio / Build Tools** decken den **.NET-/MSBuild-Teil** ab. Beide Werkzeugfamilien lösen unterschiedliche Probleme. Wer das vermischt, verliert meist Zeit in Buildfehlern, die gar nicht auf derselben Ebene liegen. citeturn23search0turn22search2turn27search1turn27search4
 
@@ -70,39 +70,39 @@ Die sinnvollste neue Repository-Architektur ist **kein Fork des Referenzrepos**,
 
 Die folgende Vergleichstabelle stellt das Referenzrepo der empfohlenen Zielstruktur gegenüber. Die Fakten zum Referenzrepo stammen aus README, Verzeichnisstruktur, Sprachmix und Installationsbeschreibung des Repos. citeturn10search0turn1view0
 
-| Aspekt | Referenzrepo `grasshopper-mcp` | Neuer Vorschlag `gomcp-gh` |
-|---|---|---|
-| Primäre Sprache | C# + Python | C# + Go |
-| Hauptzweck | MCP-Bridge zu Claude Desktop | Grasshopper-Komponentenbibliothek mit Go-Rechenkern |
-| Grasshopper-Frontend | `GH_MCP.gha` mit TCP-Server | Dünne `.gha`-Bibliothek mit Komponenten und Interop |
-| Rechenkern | Python-Bridge + Wissensbasis | Go-Core als native DLL |
-| Build-Pipeline | Visual Studio + Python/PyPI | Go `c-shared` + `dotnet build` / MSBuild |
-| Transportebene | TCP zwischen GHA und Python-Bridge | Im MVP keine; optional später lokaler MCP-Server |
-| Packaging | GHA-Datei + Python-Paket | GHA + native DLL, optional Yak-Paket |
-| Lizenz | MIT | MIT empfohlen; Apache-2.0 nur, wenn Sie bewusst Patentklauseln wollen |
+| Aspekt               | Referenzrepo `grasshopper-mcp`     | Neuer Vorschlag `gomcp-gh`                                            |
+| -------------------- | ---------------------------------- | --------------------------------------------------------------------- |
+| Primäre Sprache      | C# + Python                        | C# + Go                                                               |
+| Hauptzweck           | MCP-Bridge zu Claude Desktop       | Grasshopper-Komponentenbibliothek mit Go-Rechenkern                   |
+| Grasshopper-Frontend | `GH_MCP.gha` mit TCP-Server        | Dünne `.gha`-Bibliothek mit Komponenten und Interop                   |
+| Rechenkern           | Python-Bridge + Wissensbasis       | Go-Core als native DLL                                                |
+| Build-Pipeline       | Visual Studio + Python/PyPI        | Go `c-shared` + `dotnet build` / MSBuild                              |
+| Transportebene       | TCP zwischen GHA und Python-Bridge | Im MVP keine; optional später lokaler MCP-Server                      |
+| Packaging            | GHA-Datei + Python-Paket           | GHA + native DLL, optional Yak-Paket                                  |
+| Lizenz               | MIT                                | MIT empfohlen; Apache-2.0 nur, wenn Sie bewusst Patentklauseln wollen |
 
 Die folgende Projektstruktur ist für ein neues Repository zweckmäßig. Sie ist bewusst auf Testbarkeit, klare Verantwortlichkeiten und spätere Erweiterbarkeit ausgelegt.
 
-| Pfad | Zweck |
-|---|---|
-| `go.mod` | Go-Moduldefinition |
-| `global.json` | Pinning der .NET-SDK-Version |
-| `README.md` | Architektur, Build, Installation |
-| `cmd/mcpcore/main.go` | Dünner cgo-Export-Layer |
-| `internal/core/` | Fachliche Logik in reinem Go |
-| `internal/ffi/` | Hilfstypen für Marshaling, falls nötig |
-| `src/GoMcp.Gh/GoMcp.Gh.csproj` | C#-Grasshopper-Projekt |
-| `src/GoMcp.Gh/AssemblyInfo.cs` | `GH_AssemblyInfo`-Implementierung |
-| `src/GoMcp.Gh/PriorityLoader.cs` | `GH_AssemblyPriority`-Bootstrap |
+| Pfad                             | Zweck                                  |
+| -------------------------------- | -------------------------------------- |
+| `go.mod`                         | Go-Moduldefinition                     |
+| `global.json`                    | Pinning der .NET-SDK-Version           |
+| `README.md`                      | Architektur, Build, Installation       |
+| `cmd/mcpcore/main.go`            | Dünner cgo-Export-Layer                |
+| `internal/core/`                 | Fachliche Logik in reinem Go           |
+| `internal/ffi/`                  | Hilfstypen für Marshaling, falls nötig |
+| `src/GoMcp.Gh/GoMcp.Gh.csproj`   | C#-Grasshopper-Projekt                 |
+| `src/GoMcp.Gh/AssemblyInfo.cs`   | `GH_AssemblyInfo`-Implementierung      |
+| `src/GoMcp.Gh/PriorityLoader.cs` | `GH_AssemblyPriority`-Bootstrap        |
 | `src/GoMcp.Gh/Interop/Native.cs` | `LibraryImport`/`DllImport`-Signaturen |
-| `src/GoMcp.Gh/Components/` | Einzelne `GH_Component`-Klassen |
-| `build/build.ps1` | Lokaler Windows-Build |
-| `build/package.ps1` | Packaging und Layout |
-| `yak/manifest.yml` | Paket-Metadaten für Yak |
-| `tests/go/` | Go-Unit-Tests |
-| `tests/dotnet/` | .NET-Smoke- und Interop-Tests |
-| `artifacts/` | Build-Artefakte |
-| `dist/` | Installations- oder Release-Layout |
+| `src/GoMcp.Gh/Components/`       | Einzelne `GH_Component`-Klassen        |
+| `build/build.ps1`                | Lokaler Windows-Build                  |
+| `build/package.ps1`              | Packaging und Layout                   |
+| `yak/manifest.yml`               | Paket-Metadaten für Yak                |
+| `tests/go/`                      | Go-Unit-Tests                          |
+| `tests/dotnet/`                  | .NET-Smoke- und Interop-Tests          |
+| `artifacts/`                     | Build-Artefakte                        |
+| `dist/`                          | Installations- oder Release-Layout     |
 
 Die Interaktion der Schichten sollte so aussehen:
 
@@ -347,13 +347,13 @@ Die offizielle Grasshopper-Dokumentation für Windows empfiehlt den Debug-Loop d
 
 Pragmatisch funktioniert folgende Testpyramide am besten:
 
-| Ebene | Werkzeug | Ziel |
-|---|---|---|
-| Go-Unit-Tests | `go test ./...` | Fachlogik ohne Rhino-Abhängigkeit prüfen |
-| Native Export-Prüfung | `dumpbin /exports` | Sichtbarkeit und Symbolnamen prüfen |
-| .NET-Smoke-Test | `dotnet test` | P/Invoke-Signaturen und Ladepfade prüfen |
+| Ebene                  | Werkzeug              | Ziel                                              |
+| ---------------------- | --------------------- | ------------------------------------------------- |
+| Go-Unit-Tests          | `go test ./...`       | Fachlogik ohne Rhino-Abhängigkeit prüfen          |
+| Native Export-Prüfung  | `dumpbin /exports`    | Sichtbarkeit und Symbolnamen prüfen               |
+| .NET-Smoke-Test        | `dotnet test`         | P/Invoke-Signaturen und Ladepfade prüfen          |
 | Rhino-Integrationslauf | Visual Studio / Rhino | `SolveInstance`, Parameter, Runtime-Fehler prüfen |
-| Kompatibilitätscheck | `compat.exe` | Rhino-8-.NET-Core-Kompatibilität absichern |
+| Kompatibilitätscheck   | `compat.exe`          | Rhino-8-.NET-Core-Kompatibilität absichern        |
 
 Die wichtigsten Diagnosebefehle für den Alltag sind:
 
@@ -405,15 +405,15 @@ McNeel dokumentiert außerdem den Distributions-Tag von Yak-Paketen und erläute
 
 Die folgenden Probleme sind in diesem Projekttyp die klassischen Zeitfresser. Die Ursachen sind gut dokumentiert, aber sie zeigen sich oft erst zur Laufzeit.
 
-| Problem | Typische Ursache | Gegenmaßnahme |
-|---|---|---|
-| `.gha` lädt, Komponente erscheint aber nicht | Falscher C#-Projektaufbau oder keine `GH_Component`-Typen | Auf `GH_Component`, leeren Konstruktor, GUIDs und Metadata-Klassen prüfen |
-| `DllNotFoundException` | Native DLL liegt nicht am erwarteten Pfad | Relative Layouts klar definieren, Bootstrap mit explizitem Load |
-| `EntryPointNotFoundException` | Falscher Exportname oder Namensmangling-Annahme | `dumpbin /exports` prüfen, EntryPoint explizit setzen |
-| `AccessViolationException` | Falsche Signatur, falsches Bool-/String-Marshalling | Signaturen spiegeln, mit primitiven Typen beginnen |
-| Cross-Compile schlägt fehl | `cgo` ist deaktiviert oder `CC` fehlt | Nativ auf Windows bauen oder Ziel-Compiler explizit setzen |
-| Bestehende `.gh`-Dateien brechen nach Refactoring | `ComponentGuid` wurde geändert | GUIDs stabil halten; später `IGH_UpgradeObject` für Migrationspfade |
-| Rhino 8 .NET Core verhält sich anders als Rhino 7 | Runtime-Unterschiede zwischen .NET Core und .NET Framework | Früh mit `compat.exe` prüfen und ggf. multi-targeten |
+| Problem                                           | Typische Ursache                                           | Gegenmaßnahme                                                             |
+| ------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `.gha` lädt, Komponente erscheint aber nicht      | Falscher C#-Projektaufbau oder keine `GH_Component`-Typen  | Auf `GH_Component`, leeren Konstruktor, GUIDs und Metadata-Klassen prüfen |
+| `DllNotFoundException`                            | Native DLL liegt nicht am erwarteten Pfad                  | Relative Layouts klar definieren, Bootstrap mit explizitem Load           |
+| `EntryPointNotFoundException`                     | Falscher Exportname oder Namensmangling-Annahme            | `dumpbin /exports` prüfen, EntryPoint explizit setzen                     |
+| `AccessViolationException`                        | Falsche Signatur, falsches Bool-/String-Marshalling        | Signaturen spiegeln, mit primitiven Typen beginnen                        |
+| Cross-Compile schlägt fehl                        | `cgo` ist deaktiviert oder `CC` fehlt                      | Nativ auf Windows bauen oder Ziel-Compiler explizit setzen                |
+| Bestehende `.gh`-Dateien brechen nach Refactoring | `ComponentGuid` wurde geändert                             | GUIDs stabil halten; später `IGH_UpgradeObject` für Migrationspfade       |
+| Rhino 8 .NET Core verhält sich anders als Rhino 7 | Runtime-Unterschiede zwischen .NET Core und .NET Framework | Früh mit `compat.exe` prüfen und ggf. multi-targeten                      |
 
 Diese Fallstricke sind keine Nebensächlichkeiten. In der Praxis sind **Ladepfad**, **Symbolname**, **Guid-Stabilität** und **Rhino-7/8-Runtime-Unterschiede** die vier größten Risikotreiber. Wer sie von Beginn an als explizite Designentscheidungen behandelt, spart mehr Zeit als mit jeder späteren Optimierung. citeturn15search0turn15search1turn23search0turn14search1turn28search2turn28search5turn29search0
 
@@ -421,12 +421,12 @@ Diese Fallstricke sind keine Nebensächlichkeiten. In der Praxis sind **Ladepfad
 
 Die Aufwandsplanung sollte die Lernkurve ehrlich abbilden. Das folgende Raster ist eine projektspezifische Schätzung für ein kleines Windows-MVP mit ein bis drei Komponenten, Yak optional und ohne LLM-/MCP-Transportebene.
 
-| Profil | Geschätzter Nettoaufwand | Erwartbares Ergebnis |
-|---|---:|---|
-| Go + C# + Grasshopper bereits vertraut | 3–5 Arbeitstage | Stabiler MVP mit 1–3 Komponenten |
-| Go stark, Grasshopper/Interop neu | 6–10 Arbeitstage | MVP, aber mit spürbarer Debugging-Zeit |
-| Grasshopper neu, Interop neu | 8–15 Arbeitstage | MVP erreichbar, aber mit höherem Architektur- und Testaufwand |
-| Vollausbau inkl. Rhino 7/8, Yak, Upgrade-Pfade, optionalem MCP-Server | 3–6 Wochen | Produktisierbare Erstversion |
+| Profil                                                                | Geschätzter Nettoaufwand | Erwartbares Ergebnis                                          |
+| --------------------------------------------------------------------- | -----------------------: | ------------------------------------------------------------- |
+| Go + C# + Grasshopper bereits vertraut                                |          3–5 Arbeitstage | Stabiler MVP mit 1–3 Komponenten                              |
+| Go stark, Grasshopper/Interop neu                                     |         6–10 Arbeitstage | MVP, aber mit spürbarer Debugging-Zeit                        |
+| Grasshopper neu, Interop neu                                          |         8–15 Arbeitstage | MVP erreichbar, aber mit höherem Architektur- und Testaufwand |
+| Vollausbau inkl. Rhino 7/8, Yak, Upgrade-Pfade, optionalem MCP-Server |               3–6 Wochen | Produktisierbare Erstversion                                  |
 
 Empfohlen ist ein gestufter Weg. Zuerst ein **Rhino-8-only-MVP** mit einer einzigen Komponente und rein numerischer Signatur. Dann Packaging über Yak. Danach erst zusätzliche Datentypen, Strukturen, Arrays und gegebenenfalls ein optionaler Go-MCP-Server, wenn Sie funktional wirklich in Richtung des Referenzrepos gehen möchten. Diese Reihenfolge passt zu den dokumentierten Rhino-8-Runtime-Gegebenheiten, zur Yak-Paketierung und zu den Interop-Best-Practices. citeturn29search0turn12search2turn25search4turn15search0
 

@@ -69,6 +69,110 @@ func TestDocumentInfoSuccess(t *testing.T) {
 	}
 }
 
+func TestAddComponentSendsParams(t *testing.T) {
+	address, stop := startFakeServer(t, func(request Request) Response {
+		if request.Method != "add_component" {
+			t.Fatalf("method = %q, want add_component", request.Method)
+		}
+		params, ok := request.Params.(map[string]any)
+		if !ok {
+			t.Fatalf("params = %T, want map[string]any", request.Params)
+		}
+		if params["name"] != "Addition" {
+			t.Fatalf("name = %v, want Addition", params["name"])
+		}
+		return successResponse(t, request.ID, AddComponentResult{
+			ComponentID: "component-1",
+			Name:        "Addition",
+			Nickname:    "Add",
+		})
+	})
+	defer stop()
+
+	client := New(address)
+	result, err := client.AddComponent(context.Background(), AddComponentParams{Name: "Addition"})
+	if err != nil {
+		t.Fatalf("AddComponent returned error: %v", err)
+	}
+	if result.ComponentID != "component-1" {
+		t.Fatalf("component id = %q, want component-1", result.ComponentID)
+	}
+}
+
+func TestConnectSendsRefs(t *testing.T) {
+	address, stop := startFakeServer(t, func(request Request) Response {
+		if request.Method != "connect" {
+			t.Fatalf("method = %q, want connect", request.Method)
+		}
+		return successResponse(t, request.ID, ConnectResult{Connected: true})
+	})
+	defer stop()
+
+	client := New(address)
+	result, err := client.Connect(context.Background(), ConnectParams{
+		Source: ParameterRef{ComponentID: "a", Parameter: "R"},
+		Target: ParameterRef{ComponentID: "b", Parameter: "A"},
+	})
+	if err != nil {
+		t.Fatalf("Connect returned error: %v", err)
+	}
+	if !result.Connected {
+		t.Fatalf("connected = false, want true")
+	}
+}
+
+func TestAddComponentValidatesName(t *testing.T) {
+	client := New("127.0.0.1:1")
+	_, err := client.AddComponent(context.Background(), AddComponentParams{})
+	var protocolErr *ProtocolError
+	if !errors.As(err, &protocolErr) {
+		t.Fatalf("error = %T %v, want *ProtocolError", err, err)
+	}
+	if protocolErr.Code != "invalid_arguments" {
+		t.Fatalf("code = %q, want invalid_arguments", protocolErr.Code)
+	}
+}
+
+func TestAddComponentAllowsNickname(t *testing.T) {
+	address, stop := startFakeServer(t, func(request Request) Response {
+		return successResponse(t, request.ID, AddComponentResult{ComponentID: "component-1", Nickname: "Add"})
+	})
+	defer stop()
+
+	client := New(address)
+	_, err := client.AddComponent(context.Background(), AddComponentParams{Nickname: "Add"})
+	if err != nil {
+		t.Fatalf("AddComponent returned error: %v", err)
+	}
+}
+
+func TestSetInputRejectsObjectValue(t *testing.T) {
+	client := New("127.0.0.1:1")
+	_, err := client.SetInput(context.Background(), SetInputParams{
+		Target: ParameterRef{ComponentID: "component-1", Parameter: "A"},
+		Value:  map[string]any{"nested": "object"},
+	})
+	var protocolErr *ProtocolError
+	if !errors.As(err, &protocolErr) {
+		t.Fatalf("error = %T %v, want *ProtocolError", err, err)
+	}
+	if protocolErr.Code != "invalid_arguments" {
+		t.Fatalf("code = %q, want invalid_arguments", protocolErr.Code)
+	}
+}
+
+func TestConnectValidatesRefs(t *testing.T) {
+	client := New("127.0.0.1:1")
+	_, err := client.Connect(context.Background(), ConnectParams{})
+	var protocolErr *ProtocolError
+	if !errors.As(err, &protocolErr) {
+		t.Fatalf("error = %T %v, want *ProtocolError", err, err)
+	}
+	if protocolErr.Code != "invalid_arguments" {
+		t.Fatalf("code = %q, want invalid_arguments", protocolErr.Code)
+	}
+}
+
 func TestProtocolError(t *testing.T) {
 	address, stop := startFakeServer(t, func(request Request) Response {
 		return Response{

@@ -1,0 +1,8 @@
+{
+  "id": "contract-4",
+  "ok": false,
+  "error": {
+    "code": "component_not_found",
+    "message": "No matching component."
+  }
+}

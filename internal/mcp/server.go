@@ -9,6 +9,7 @@ import (
 	"io"
 
 	"github.com/cwbudde/grasshopper-mcp/internal/ghclient"
+	"github.com/cwbudde/grasshopper-mcp/internal/version"
 )
 
 type Server struct {
@@ -91,7 +92,7 @@ func (s *Server) handleLine(ctx context.Context, line []byte) *rpcResponse {
 			},
 			"serverInfo": map[string]any{
 				"name":    "grasshopper-mcp",
-				"version": "0.1.0",
+				"version": version.Version,
 			},
 		})
 	case "tools/list":

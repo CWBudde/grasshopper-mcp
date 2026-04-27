@@ -1,0 +1,9 @@
+{
+  "id": "contract-1",
+  "ok": true,
+  "result": {
+    "version": "0.1.0",
+    "activeDocument": true,
+    "grasshopperLoaded": true
+  }
+}

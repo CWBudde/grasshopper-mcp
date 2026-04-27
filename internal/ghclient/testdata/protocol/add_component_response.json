@@ -1,0 +1,9 @@
+{
+  "id": "contract-2",
+  "ok": true,
+  "result": {
+    "componentId": "component-1",
+    "name": "Addition",
+    "nickname": "Add"
+  }
+}

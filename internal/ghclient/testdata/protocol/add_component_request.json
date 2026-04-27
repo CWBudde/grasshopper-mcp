@@ -1,0 +1,5 @@
+{
+  "id": "contract-2",
+  "method": "add_component",
+  "params": { "name": "Addition", "x": 10, "y": 20 }
+}
