@@ -1,0 +1,19 @@
+# Go
+/grasshopper-mcp
+*.test
+
+# .NET
+bin/
+obj/
+
+# Build output
+/dist/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# ai agents
+.codex

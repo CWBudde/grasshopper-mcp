@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>GrasshopperMcp.Plugin</AssemblyName>
+    <RootNamespace>GrasshopperMcp.Plugin</RootNamespace>
+    <OutputType>Library</OutputType>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(RHINO_SYSTEM_DIR)' != ''">
+    <Reference Include="RhinoCommon">
+      <HintPath>$(RHINO_SYSTEM_DIR)\RhinoCommon.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Grasshopper">
+      <HintPath>$(RHINO_SYSTEM_DIR)\Grasshopper.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="RequireRhinoReferences" BeforeTargets="ResolveReferences" Condition="'$(RHINO_SYSTEM_DIR)' == ''">
+    <Error Text="Set RHINO_SYSTEM_DIR to Rhino 8's System directory before building the Grasshopper plugin." />
+  </Target>
+
+  <Target Name="CopyAsGha" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDir)$(AssemblyName).gha" />
+  </Target>
+</Project>
+
